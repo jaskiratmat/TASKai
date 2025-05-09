@@ -3,13 +3,16 @@ using BepInEx;
 using UnityEngine;
 using HarmonyLib;
 using JoelG.ENA4;
-using System.Reflection;
+//using System.Reflection;
 using System.Collections;
 using System.IO;
 using Rewired;
-using UnityEngineInternal;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
+using Rewired.Integration.UnityUI;
+using System.Runtime.InteropServices;
+using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
+//using UnityEngineInternal;
+//using UnityEngine.UI;
+//using UnityEngine.EventSystems;
 
 
 namespace TASKai
@@ -24,7 +27,7 @@ namespace TASKai
         static string teleportMethodName = "Teleport";
         static string rotationMethodName = "ImmediatelySetRotation";
         static string velocityMethodName = "SetImmediateVelocity";
-        static string moveToLookMethodName = "MoveToLookTarget";
+        //static string moveToLookMethodName = "MoveToLookTarget";
         //static string inputMethodName = "QueueInputEvent";
         //static string moveToLookMethodName = "SetLookTarget";
 
@@ -53,12 +56,20 @@ namespace TASKai
         //    return inputMethod;
         //}
 
-        public static System.Reflection.MethodInfo GetLookMethod()
-        {
-            System.Type[] parameterTypes = new System.Type[] { typeof(Transform) }; // Example  , typeof(float)
-            System.Reflection.MethodInfo lookMethod = AccessTools.Method(viewerType, moveToLookMethodName, parameterTypes);
-            return lookMethod;
-        }
+        //public static System.Reflection.MethodInfo GetLookMethod()
+        //{
+        //    System.Type[] parameterTypes = new System.Type[] { typeof(Transform) }; // Example  , typeof(float)
+        //    System.Reflection.MethodInfo lookMethod = AccessTools.Method(viewerType, moveToLookMethodName, parameterTypes);
+        //    return lookMethod;
+        //}
+
+        //public static System.Reflection.MethodInfo GetInputMethod()
+        //{
+        //    System.Type[] parameterTypes = new System.Type[] { }; // Example
+        //    System.Reflection.MethodInfo inputMethod = AccessTools.Method(typeof(RewiredStandaloneInputModule), "SendSubmitEventToSelectedObject", parameterTypes);
+        //    return inputMethod;
+        //}
+
         public static System.Reflection.MethodInfo GetVelocityMethod()
         {
             System.Type[] parameterTypes = new System.Type[] { typeof(Vector3) }; // Example
@@ -100,10 +111,16 @@ namespace TASKai
                 TASKai.Instance.startPause = false;
                 return false;
             }
-            if ((actionId == 5 || actionId == 36) && TASKai.Instance.startInteract) // Interact
+            //if ((actionId == 5 || actionId == 36) && TASKai.Instance.startInteract) // Interact
+            //{
+            //    __result = true;
+            //    TASKai.Instance.startInteract = false;
+            //    return false;
+            //}
+            if (actionId == 5 && TASKai.Instance.startSkip) // Interact
             {
                 __result = true;
-                TASKai.Instance.startInteract = false;
+                TASKai.Instance.startSkip = false;
                 return false;
             }
             //if ((actionId == 35) && TASKai.Instance.verticalUI) // Interact
@@ -112,10 +129,16 @@ namespace TASKai
             //    TASKai.Instance.verticalUI = false;
             //    return false;
             //}
-            if ((actionId == 40 || actionId == 43) && TASKai.Instance.startSkip) // Dialouge Skip
+            //if ((actionId == 40 || actionId == 43) && TASKai.Instance.startSkip) // Dialouge Skip
+            //{
+            //    __result = true;
+            //    TASKai.Instance.startSkip = false;
+            //    return false;
+            //}
+            if (actionId == 43) // Dialouge Skip
             {
                 __result = true;
-                TASKai.Instance.startSkip = false;
+                //TASKai.Instance.startSkip = false;
                 return false;
             }
             return true;
@@ -131,6 +154,11 @@ namespace TASKai
                 return false;
             }
             if (actionId == 14 && TASKai.Instance.startCrouching) // Crouch
+            {
+                __result = true;
+                return false;
+            }
+            if (actionId == 43) // Dialouge Skip
             {
                 __result = true;
                 return false;
@@ -192,18 +220,26 @@ namespace TASKai
             TASKai.Instance.playerViewerInstance = __instance;
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(Input), "GetButtonDown", new Type[] { typeof(string) })]
-        private static bool inputPrefix(Input __instance, string buttonName, ref bool __result)
-        {
-            if (buttonName == "Submit")
-            {
-                __result = true;
-                return false;
-            }
-            return true;
-            //TASKai.Instance.playerViewerInstance = __instance;
-        }
+        //[HarmonyPrefix]
+        //[HarmonyPatch(typeof(RewiredStandaloneInputModule), "GetButton", new Type[] { typeof(Player),  typeof(int) })]
+        //private static void ProcessPrefix(RewiredStandaloneInputModule __instance,  Player player, int actionId, ref bool __result)
+        //{
+        //    __result = true;
+        //    TASKai.Instance.playerInputInstance = __instance;
+        //}
+
+        //[HarmonyPrefix]
+        //[HarmonyPatch(typeof(Input), "GetButtonDown", new Type[] { typeof(string) })]
+        //private static bool inputPrefix(Input __instance, string buttonName, ref bool __result)
+        //{
+        //    if (buttonName == "Submit")
+        //    {
+        //        __result = true;
+        //        return false;
+        //    }
+        //    return true;
+        //    //TASKai.Instance.playerViewerInstance = __instance;
+        //}
 
         //[HarmonyPrefix]
         //[HarmonyPatch(inputType, "Update")]
@@ -219,6 +255,7 @@ namespace TASKai
         public PlayerMover playerMoverInstance;
         public PlayerViewer playerViewerInstance;
         public Player playerInstance;
+        //public RewiredStandaloneInputModule playerInputInstance;
         //public object playerInputInstance;
         public static TASKai Instance;
 
@@ -239,7 +276,7 @@ namespace TASKai
 
         private string inputFilePath;
         
-        System.Reflection.PropertyInfo ViewPoint = AccessTools.Property(typeof(PlayerViewer), "ViewPoint");
+        //System.Reflection.PropertyInfo ViewPoint = AccessTools.Property(typeof(PlayerViewer), "ViewPoint");
 
         System.Reflection.FieldInfo camY = AccessTools.Field(typeof(PlayerViewer), "cameraAngleBase");
         System.Reflection.FieldInfo camX = AccessTools.Field(typeof(PlayerViewer), "playerRotationBase");
@@ -247,7 +284,8 @@ namespace TASKai
         System.Reflection.MethodInfo teleportMethod = PlayerMoverPatch.GetTeleportMethod();
         System.Reflection.MethodInfo rotateMethod = PlayerMoverPatch.GetRotationMethod();
         System.Reflection.MethodInfo velocityMethod = PlayerMoverPatch.GetVelocityMethod();
-        System.Reflection.MethodInfo lookMethod = PlayerMoverPatch.GetLookMethod();
+        //System.Reflection.MethodInfo inputMethod = PlayerMoverPatch.GetInputMethod();
+        //System.Reflection.MethodInfo lookMethod = PlayerMoverPatch.GetLookMethod();
         //System.Reflection.MethodInfo inputMethod = PlayerMoverPatch.GetInputMethod();
         //System.Reflection.MethodInfo simulatedInputMethod = PlayerMoverPatch.GetSimulatedInputMethod();
 
@@ -264,7 +302,7 @@ namespace TASKai
             harmony.PatchAll();
 
             Logger.LogInfo("KaiTAS Plugin Loaded!");
-            Logger.LogInfo(AccessTools.TypeByName("NativeInputSystem"));
+            //Logger.LogInfo(AccessTools.TypeByName("NativeInputSystem"));
         }
 
         private void Update()
@@ -283,7 +321,7 @@ namespace TASKai
             }
             //else if (Input.GetKeyDown(KeyCode.F3))
             //{
-            //    inputMethod.Invoke(playerMoverInstance, new object[] { 2 });
+            //    //inputMethod.Invoke(playerInputInstance, new object[] { });
             //}
         }
 
@@ -314,10 +352,10 @@ namespace TASKai
                 {
                     startSkip = true;
                 }
-                else if (string.Equals(lines[i], "inter", StringComparison.OrdinalIgnoreCase))
-                {
-                    startInteract = true;
-                }
+                //else if (string.Equals(lines[i], "inter", StringComparison.OrdinalIgnoreCase))
+                //{
+                //    startInteract = true;
+                //}
                 else if (string.Equals(lines[i], "pause", StringComparison.OrdinalIgnoreCase))
                 {
                     startPause = true;
@@ -431,22 +469,22 @@ namespace TASKai
                         velocityMethod.Invoke(playerMoverInstance, new object[] { new Vector3(x, y, z) });
                     }
                 }
-                else if (lines[i].StartsWith("look"))
-                {
-                    string[] parts = lines[i].Split(' ');
-                    if (parts.Length == 4)
-                    {
-                        float x = float.Parse(parts[1]);
-                        float y = float.Parse(parts[2]);
-                        float z = float.Parse(parts[3]);
-                        Transform PlayerPosition = (Transform)ViewPoint.GetValue(playerViewerInstance);
-                        GameObject lookAtTarget = new GameObject("ForcedLookTarget");
-                        print($"{PlayerPosition.position}");
-                        lookAtTarget.transform.position = PlayerPosition.position;
-                        lookMethod.Invoke(playerViewerInstance, new object[] { lookAtTarget.transform });
-                        //RotationValue.SmoothDamp()
-                    }
-                }
+                //else if (lines[i].StartsWith("look"))
+                //{
+                //    string[] parts = lines[i].Split(' ');
+                //    if (parts.Length == 4)
+                //    {
+                //        float x = float.Parse(parts[1]);
+                //        float y = float.Parse(parts[2]);
+                //        float z = float.Parse(parts[3]);
+                //        Transform PlayerPosition = (Transform)ViewPoint.GetValue(playerViewerInstance);
+                //        GameObject lookAtTarget = new GameObject("ForcedLookTarget");
+                //        print($"{PlayerPosition.position}");
+                //        lookAtTarget.transform.position = PlayerPosition.position;
+                //        lookMethod.Invoke(playerViewerInstance, new object[] { lookAtTarget.transform });
+                //        //RotationValue.SmoothDamp()
+                //    }
+                //}
                 //else if (lines[i].StartsWith("stop"))
                 //{
                 //    string[] parts = lines[i].Split(' ');
@@ -466,6 +504,12 @@ namespace TASKai
                 //            startMovingPlayer = false;
                 //        }
                 //    }
+                else if (lines[i].StartsWith("click"))
+                {
+                    MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.XDown);
+                    MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.XUp);
+                    //MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.X2Up);
+                }
                 //else if (lines[i].StartsWith("click"))
                 //{
                 //    string[] parts = lines[i].Split(' ');
@@ -548,74 +592,79 @@ namespace TASKai
     }
 }
 
-//public class MouseOperations
-//{
-//    [Flags]
-//    public enum MouseEventFlags
-//    {
-//        LeftDown = 0x00000002,
-//        LeftUp = 0x00000004,
-//        MiddleDown = 0x00000020,
-//        MiddleUp = 0x00000040,
-//        Move = 0x00000001,
-//        Absolute = 0x00008000,
-//        RightDown = 0x00000008,
-//        RightUp = 0x00000010
-//    }
+public class MouseOperations
+{
+    [Flags]
+    public enum MouseEventFlags
+    {
+        LeftDown = 0x00000002,
+        LeftUp = 0x00000004,
+        MiddleDown = 0x00000020,
+        MiddleUp = 0x00000040,
+        Move = 0x00000001,
+        Absolute = 0x00008000,
+        RightDown = 0x00000008,
+        RightUp = 0x00000010,
+        XDown = 0x00000080,
+        XUp = 0x00000100
+        //X2Up = 
+        //X2Down = 0x00000100,
+        //X2Up = 0x00000200,
+    }
 
-//    [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
-//    [return: MarshalAs(UnmanagedType.Bool)]
-//    private static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetCursorPos(int x, int y);
 
-//    [DllImport("user32.dll")]
-//    [return: MarshalAs(UnmanagedType.Bool)]
-//    private static extern bool GetCursorPos(out MousePoint lpMousePoint);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out MousePoint lpMousePoint);
 
-//    [DllImport("user32.dll")]
-//    private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
+    [DllImport("user32.dll")]
+    private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 
-//    public static void SetCursorPosition(int x, int y)
-//    {
-//        SetCursorPos(x, y);
-//    }
+    public static void SetCursorPosition(int x, int y)
+    {
+        SetCursorPos(x, y);
+    }
 
-//    public static void SetCursorPosition(MousePoint point)
-//    {
-//        SetCursorPos(point.X, point.Y);
-//    }
+    public static void SetCursorPosition(MousePoint point)
+    {
+        SetCursorPos(point.X, point.Y);
+    }
 
-//    public static MousePoint GetCursorPosition()
-//    {
-//        MousePoint currentMousePoint;
-//        var gotPoint = GetCursorPos(out currentMousePoint);
-//        if (!gotPoint) { currentMousePoint = new MousePoint(0, 0); }
-//        return currentMousePoint;
-//    }
+    public static MousePoint GetCursorPosition()
+    {
+        MousePoint currentMousePoint;
+        var gotPoint = GetCursorPos(out currentMousePoint);
+        if (!gotPoint) { currentMousePoint = new MousePoint(0, 0); }
+        return currentMousePoint;
+    }
 
-//    public static void MouseEvent(MouseEventFlags value)
-//    {
-//        MousePoint position = GetCursorPosition();
+    public static void MouseEvent(MouseEventFlags value)
+    {
+        MousePoint position = GetCursorPosition();
 
-//        mouse_event
-//            ((int)value,
-//             position.X,
-//             position.Y,
-//             0,
-//             0)
-//            ;
-//    }
+        mouse_event
+            ((int)value,
+             position.X,
+             position.Y,
+             0,
+             0)
+            ;
+    }
 
-//    [StructLayout(LayoutKind.Sequential)]
-//    public struct MousePoint
-//    {
-//        public int X;
-//        public int Y;
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MousePoint
+    {
+        public int X;
+        public int Y;
 
-//        public MousePoint(int x, int y)
-//        {
-//            X = x;
-//            Y = y;
-//        }
-//    }
-//}
+        public MousePoint(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+}
 
